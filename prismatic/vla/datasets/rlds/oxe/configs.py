@@ -37,6 +37,7 @@ class StateEncoding(IntEnum):
     POS_QUAT = 2            # EEF XYZ (3) + Quaternion (4) + Gripper Open/Close (1)
     JOINT = 3               # Joint Angles (7, <PAD> if fewer) + Gripper Open/Close (1)
     JOINT_BIMANUAL = 4      # Joint Angles (2 x [ Joint Angles (6) + Gripper Open/Close (1) ])
+    R1PRO = 5               # Base Velocity (3) + Trunk (4) + Joint Angles (2 x [ Joint Angles (7) + Gripper Open/Close (1) ])
     # fmt: on
 
 
@@ -47,6 +48,7 @@ class ActionEncoding(IntEnum):
     JOINT_POS = 2           # Joint Delta Position (7) + Gripper Open/Close (1)
     JOINT_POS_BIMANUAL = 3  # Joint Delta Position (2 x [ Joint Delta Position (6) + Gripper Open/Close (1) ])
     EEF_R6 = 4              # EEF Delta XYZ (3) + R6 (6) + Gripper Open/Close (1)
+    R1PRO_POS = 5           # Base Velocity (3) + Trunk Delta Position (4) + (2 x [ Joint Delta Position (7) + Gripper Open/Close (1) ])
     # fmt: on
 
 
@@ -706,4 +708,12 @@ OXE_DATASET_CONFIGS = {
         "state_encoding": StateEncoding.JOINT_BIMANUAL,
         "action_encoding": ActionEncoding.JOINT_POS_BIMANUAL,
     },
+    "b1k_pick_up_trash_100_demos": {
+        "image_obs_keys": {"primary": "egocentric_camera", "secondary": None, "left_wrist": "wrist_image_left", "right_wrist": "wrist_image_right"},
+        "depth_obs_keys": {"primary": None, "secondary": None, "wrist": None},
+        "state_obs_keys": ["state"],
+        "state_encoding": StateEncoding.R1PRO,
+        "action_encoding": ActionEncoding.R1PRO_POS,
+    },
+
 }

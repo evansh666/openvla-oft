@@ -845,6 +845,9 @@ def aloha_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
     # Don't need to do anything because dataset is already in the correct format
     return trajectory
 
+def b1k_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
+    # Don't need to do anything because dataset is already in the correct format
+    return trajectory
 
 # === Registry ===
 OXE_STANDARDIZATION_TRANSFORMS = {
@@ -930,4 +933,6 @@ OXE_STANDARDIZATION_TRANSFORMS = {
     "aloha1_fold_shirt_30_demos": aloha_dataset_transform,
     "aloha1_scoop_X_into_bowl_45_demos": aloha_dataset_transform,
     "aloha1_put_X_into_pot_300_demos": aloha_dataset_transform,
+    ### B1K fine-tuning datasets
+    "b1k_pick_up_trash_100_demos": b1k_dataset_transform,
 }
