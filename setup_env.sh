@@ -11,8 +11,6 @@ conda activate openvla-oft
 pip3 install torch torchvision torchaudio
 
 # Clone openvla-oft repo and pip install to download dependencies
-git clone https://github.com/moojink/openvla-oft.git
-cd openvla-oft
 pip install -e .
 
 # Install Flash Attention 2 for training (https://github.com/Dao-AILab/flash-attention)
@@ -21,6 +19,10 @@ pip install packaging ninja
 ninja --version; echo $?  # Verify Ninja --> should return exit code "0"
 pip install "flash-attn==2.5.5" --no-build-isolation
 
-
 mkdir -p checkpoints
 mkdir -p datasets
+
+# install for RLDS dataset: tensorflow, tensorflow_datasets, tensorflow_hub, apache_beam
+pip install tensorflow_hub
+pip install apache_beam
+

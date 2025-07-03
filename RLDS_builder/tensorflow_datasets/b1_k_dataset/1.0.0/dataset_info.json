@@ -1,0 +1,21 @@
+{
+  "citation": "// TODO(example_dataset): BibTeX citation",
+  "description": "Behavior 1K dataset",
+  "fileFormat": "tfrecord",
+  "moduleName": "b1k_dataset_dataset_builder",
+  "name": "b1_k_dataset",
+  "releaseNotes": {
+    "1.0.0": "Initial release."
+  },
+  "splits": [
+    {
+      "filepathTemplate": "{DATASET}-{SPLIT}.{FILEFORMAT}-{SHARD_X_OF_Y}",
+      "name": "train",
+      "numBytes": "1615060",
+      "shardLengths": [
+        "1"
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
