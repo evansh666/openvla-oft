@@ -13,7 +13,7 @@ tfds build --data_dir /path/to/save/rlds/dataset
 To apply to our customized settings for finetuning, the dataset needs start with "b1k"
 
 ## Finetune OpenVLA with OFT+
-1. Register the dataset (e.g. b1k_pick_up_trash_100_demos) with our dataloader by adding an entry in configs.py` ([here](prismatic/vla/datasets/rlds/oxe/configs.py#L680)), `transforms.py` ([here](prismatic/vla/datasets/rlds/oxe/transforms.py#L928)), and `mixtures.py` ([here](prismatic/vla/datasets/rlds/oxe/mixtures.py#L216)).
+1. Register the dataset (e.g. b1k_pick_up_trash_100_demos) with our dataloader by adding an entry in `configs.py` ([here](prismatic/vla/datasets/rlds/oxe/configs.py#L680)), `transforms.py` ([here](prismatic/vla/datasets/rlds/oxe/transforms.py#L928)), and `mixtures.py` ([here](prismatic/vla/datasets/rlds/oxe/mixtures.py#L216)).
 
 2. Set desired action chunk size in [`prismatic/vla/constants.py`](prismatic/vla/constants.py)
 
