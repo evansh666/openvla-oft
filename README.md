@@ -4,7 +4,10 @@
 ```
 
 ## Convert data from hdf5 to RLDS 
-check [README.md](RLDS_builder/README.md)
+1. Check [README.md](RLDS_builder/README.md)
+
+2. Revise dataset builder (e.g., ['b1k_dataset_dataset_builder.py'](RLDS_builder/b1k_dataset/b1k_dataset_dataset_builder.py)
+
 ```
 cd RLDS_builder
 # do any customization to the dataset
