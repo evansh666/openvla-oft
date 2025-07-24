@@ -709,7 +709,7 @@ OXE_DATASET_CONFIGS = {
         "action_encoding": ActionEncoding.JOINT_POS_BIMANUAL,
     },
     "b1k_pick_up_trash_100_demos": {
-        "image_obs_keys": {"primary": "image", "secondary": None, "left_wrist": "left_wrist_image", "right_wrist": "right_wrist_image"},
+        "image_obs_keys": {"primary": "head", "secondary": None, "left_wrist": "left_wrist", "right_wrist": "right_wrist"},
         "depth_obs_keys": {"primary": None, "secondary": None, "wrist": None},
         "state_obs_keys": ["state"],
         "state_encoding": StateEncoding.R1PRO,

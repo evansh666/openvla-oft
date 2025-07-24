@@ -1,12 +1,10 @@
 from typing import Iterator, Tuple, Any
-
-import h5py
 import glob
 import numpy as np
 import tensorflow_datasets as tfds
 
 from RLDS_builder.b1k_dataset.utils.conversion_utils import MultiThreadedDatasetBuilder, resize_with_pad
-from data_utils import create_episode_from_hdf5
+from RLDS_builder.b1k_dataset.utils.data_utils import create_episode_from_hdf5, create_episode_from_video, ROBOT_CAMERA_NAMES
 
 # Change following parameters to match your dataset
 IMAGE_SIZE = 256
@@ -14,48 +12,35 @@ NUM_ACTIONS_CHUNK = 10
 ACTION_DIM = 23
 STATE_DIM = 23
 
-TRAIN_DATA_PATH = "./put_green_pepper_into_pot/train/*.hdf5"
-VAL_DATA_PATH = None
+TRAIN_DATA_PATH = "train_data/"
+VAL_DATA_PATH = "val_data/"
+SOURCE = "video"
 
-# Data conversion configuration
-# key: rlds key, value: hdf5 key
-KEY_MAP = {
-    'images': {
-        'image': "observation/egocentric_camera",
-        'left_wrist_image': "observation/wrist_image_left",
-        'right_wrist_image': "observation/wrist_image_right",
-        'low_cam_image': None,
-    },
-    'array': {
-        'action': "actions",   
-        'state': "state",
-        'reward': "reward",
-        'discount': None,
-    },
-    'scalar': {
-        'language_instruction': "prompt",
-    }
-}
-
-
-
+        
 def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
     """Yields episodes for list of data paths."""
-
-    def _parse_example(episode_path):
-        # Load and process all data
-        with h5py.File(episode_path, "r") as f:
-            episode = create_episode_from_hdf5(f)
-        
-        sample = {
+    def _parse_example(episode_path, source=SOURCE):
+        if source == "video":
+            episode = create_episode_from_video(episode_path)
+            if episode is None:
+                return None
+            
+            sample = {
             'steps': episode,
             'episode_metadata': {
-                'file_path': episode_path
+                'video_file_path': [
+                    episode_path
+                ],
+            }}
+        elif source == "parquet":
+            episode = create_episode_from_hdf5(episode_path)
+            sample = {
+                'steps': episode,
+                'episode_metadata': {
+                    "file_path": episode_path
+                }
             }
-        }
-
-        # If you want to skip an example for whatever reason, simply return None
-        return episode_path, sample
+        return episode_path, sample # Return None to skip an example
 
     for path in paths:
         ret = _parse_example(path)
@@ -87,7 +72,7 @@ class B1KDataset(MultiThreadedDatasetBuilder):
                             dtype=np.uint8,
                             encoding_format='jpeg',
                             doc=f'{obs_key.replace("_", " ").title()} RGB observation.',
-                        ) for obs_key, hdf5_key in KEY_MAP['images'].items() if hdf5_key is not None},
+                        ) for obs_key in list(ROBOT_CAMERA_NAMES.keys())},
                         'state': tfds.features.Tensor(
                             shape=(STATE_DIM,),
                             dtype=np.float32,
@@ -134,11 +119,18 @@ class B1KDataset(MultiThreadedDatasetBuilder):
     def _split_paths(self):
         """Define filepaths for data splits."""
         paths = {}
-        
+  
+        if SOURCE == "video":
+            suffix = "*.mp4"
+        elif SOURCE == "hdf5":
+            suffix = "*.hdf5"
+        else:
+            raise ValueError(f"Invalid source: {SOURCE}")
+
         if TRAIN_DATA_PATH:
-            paths["train"] = glob.glob(TRAIN_DATA_PATH)
+            paths["train"] = glob.glob(f"{TRAIN_DATA_PATH}/*.{suffix}")
         if VAL_DATA_PATH:
-            paths["val"] = glob.glob(VAL_DATA_PATH)
+            paths["val"] = glob.glob(f"{VAL_DATA_PATH}/*.{suffix}")
             
         return paths
             
