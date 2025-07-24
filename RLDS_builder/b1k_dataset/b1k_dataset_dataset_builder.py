@@ -5,7 +5,8 @@ import glob
 import numpy as np
 import tensorflow_datasets as tfds
 
-from conversion_utils import MultiThreadedDatasetBuilder, resize_with_pad
+from RLDS_builder.b1k_dataset.utils.conversion_utils import MultiThreadedDatasetBuilder, resize_with_pad
+from data_utils import create_episode_from_hdf5
 
 # Change following parameters to match your dataset
 IMAGE_SIZE = 256
@@ -37,48 +38,6 @@ KEY_MAP = {
 }
 
 
-def _extract_and_build_episode(hdf5_file):
-    """Extract data from HDF5 file and build episode steps."""
-    # Extract and process data
-    data = {}
-    for type_key in KEY_MAP.keys():
-        if type_key == 'images':
-            for obs_key, hdf5_key in KEY_MAP[type_key].items(): 
-                if hdf5_key:    
-                    raw_images = hdf5_file[hdf5_key][()]
-                    data[obs_key] = resize_with_pad(raw_images, IMAGE_SIZE, IMAGE_SIZE)
-        else:
-            for rlds_key, hdf5_key in KEY_MAP[type_key].items(): 
-                if hdf5_key:
-                    data[rlds_key] = hdf5_file[hdf5_key][()]
-    
-    assert 'action' in data, "action key not found in data"
-    assert 'state' in data, "state key not found in data"
-
-    if 'language_instruction' not in data:
-        data['language_instruction'] = ""
-    
-    # Build episode steps
-    num_steps = data['action'].shape[0]
-    episode = []
-    
-    for i in range(num_steps):
-        episode.append({
-            'observation': {
-                **{'state': data['state'][i].astype(np.float32)},
-                **{k: data[k][i] for k in KEY_MAP['images'] if k in data}
-            },
-            'action': np.asarray(data['action'][i], dtype=np.float32),
-            'language_instruction': data['language_instruction'],
-            'discount': 1.0,
-            'reward': data['reward'][i],
-            'is_first': i == 0,
-            'is_last': i == (num_steps - 1),
-            'is_terminal': i == (num_steps - 1),
-        })
-    
-    return episode
-
 
 def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
     """Yields episodes for list of data paths."""
@@ -86,7 +45,7 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
     def _parse_example(episode_path):
         # Load and process all data
         with h5py.File(episode_path, "r") as f:
-            episode = _extract_and_build_episode(f)
+            episode = create_episode_from_hdf5(f)
         
         sample = {
             'steps': episode,
