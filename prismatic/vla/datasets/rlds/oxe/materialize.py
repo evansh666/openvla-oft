@@ -48,7 +48,7 @@ def make_oxe_dataset_kwargs(
         dataset_kwargs["action_normalization_mask"] = [True] * 14
     elif dataset_kwargs["action_encoding"] is ActionEncoding.R1PRO_POS:
         dataset_kwargs["absolute_action_mask"] = [True] * 23
-        dataset_kwargs["action_normalization_mask"] = [True] * 23
+        dataset_kwargs["action_normalization_mask"] = [True] * 14 + [False] + [True] * 7 + [False]
     dataset_kwargs["action_proprio_normalization_type"] = action_proprio_normalization_type
 
     # Adjust Loaded Camera Views
