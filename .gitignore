@@ -153,3 +153,4 @@ rollouts/
 wandb/
 datasets/
 checkpoints/
+slurm_logs

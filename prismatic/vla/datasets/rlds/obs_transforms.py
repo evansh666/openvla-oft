@@ -68,7 +68,7 @@ def decode_and_resize(
                 # this is a padding image
                 image = tf.zeros((*resize_size.get(name, (1, 1)), 3), dtype=tf.uint8)
             else:
-                image = tf.io.decode_image(image, expand_animations=False, dtype=tf.uint8)
+                image = tf.io.decode_image(image,  expand_animations=False, dtype=tf.uint8)
         elif image.dtype != tf.uint8:
             raise ValueError(f"Unsupported image dtype: found image_{name} with dtype {image.dtype}")
         if name in resize_size:

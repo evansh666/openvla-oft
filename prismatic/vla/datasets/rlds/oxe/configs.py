@@ -708,7 +708,14 @@ OXE_DATASET_CONFIGS = {
         "state_encoding": StateEncoding.JOINT_BIMANUAL,
         "action_encoding": ActionEncoding.JOINT_POS_BIMANUAL,
     },
-    "b1k_pick_up_trash_100_demos": {
+    "behavior_pick_up_trash_120_demos": {
+        "image_obs_keys": {"primary": "head", "secondary": None, "left_wrist": "left_wrist", "right_wrist": "right_wrist"},
+        "depth_obs_keys": {"primary": None, "secondary": None, "wrist": None},
+        "state_obs_keys": ["state"],
+        "state_encoding": StateEncoding.R1PRO,
+        "action_encoding": ActionEncoding.R1PRO_POS,
+    },
+    "behavior_turn_on_radio_210_demos": {
         "image_obs_keys": {"primary": "head", "secondary": None, "left_wrist": "left_wrist", "right_wrist": "right_wrist"},
         "depth_obs_keys": {"primary": None, "secondary": None, "wrist": None},
         "state_obs_keys": ["state"],

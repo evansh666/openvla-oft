@@ -580,12 +580,13 @@ def crop_and_resize(image: tf.Tensor, crop_scale: float, batch_size: int) -> tf.
         ],
         axis=1,
     )
-
+    
+    print("before", image.shape)
     # Apply crop and resize
     image = tf.image.crop_and_resize(
         image, bounding_boxes, tf.range(batch_size), (OPENVLA_IMAGE_SIZE, OPENVLA_IMAGE_SIZE)
     )
-
+    print("after", image.shape)
     # Remove batch dimension if it was added
     if expanded_dims:
         image = image[0]

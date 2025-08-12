@@ -1,17 +1,33 @@
+#!/bin/bash
+
+#SBATCH --job-name=ft-openvla
+#SBATCH --account=viscam
+#SBATCH --partition=viscam
+#SBATCH --exclude=svl13,svl12
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:a5000:4
+#SBATCH --ntasks-per-node=4
+#SBATCH --mem=350G
+#SBATCH --cpus-per-task=8
+#SBATCH --time=3-00:00:00
+#SBATCH --output=slurm_logs/finetune.out
+#SBATCH --error=slurm_logs/finetune.err
+
 eval "$(conda shell.bash hook)"
 conda activate openvla-oft
 
-NUM_GPUS=4
-DATASET_ROOT_PATH=/home/evans/projects/openvla-oft/datasets
-DATASET_NAME=b1k_pick_up_trash_100_demos
-CHECKPOINT_PATH=/home/evans/projects/openvla-oft/checkpoints
-WANDB_ENTITY=evansh666
+DATASET_ROOT_PATH=/vision/u/yinhang/data/openvla/behavior
+DATASET_NAME=behavior_turn_on_radio_210_demos
+CHECKPOINT_PATH=/vision/u/yinhang/openvla-oft/checkpoints
+WANDB_ENTITY=evansh666-stanford-university
 WANDB_PROJECT=OpenVLA-OFT
-RUN_ID=parallel_dec--10_acts_chunk--continuous_acts--L1_regression--3rd_person_img--left_right_wrist_imgs--proprio_state--film
-
+RUN_ID=parallel_dec--25_acts_chunk--continuous_acts--L1_regression--3rd_person_img--left_right_wrist_imgs--proprio_state--film
 INPUT_NUM_IMGS=3
+mkdir -p $CHECKPOINT_PATH
 
-torchrun --standalone --nnodes 1 --nproc-per-node $NUM_GPUS vla-scripts/finetune.py \
+export HF_HOME=/vision/u/yinhang/cache/huggingface
+
+torchrun --standalone --nnodes 1 --nproc-per-node $SLURM_GPUS_ON_NODE vla-scripts/finetune.py \
   --vla_path openvla/openvla-7b \
   --data_root_dir $DATASET_ROOT_PATH \
   --dataset_name $DATASET_NAME \
@@ -25,12 +41,12 @@ torchrun --standalone --nnodes 1 --nproc-per-node $NUM_GPUS vla-scripts/finetune
   --learning_rate 5e-4 \
   --num_steps_before_decay 50000 \
   --max_steps 100005 \
-  --use_val_set True \
-  --val_freq 10000 \
   --save_freq 10000 \
   --save_latest_checkpoint_only False \
-  --image_aug True \
   --lora_rank 32 \
+  --run_id_note $RUN_ID \
   --wandb_entity $WANDB_ENTITY \
   --wandb_project $WANDB_PROJECT \
-  --run_id_note $RUN_ID 
+  --image_aug True 
+  # --use_val_set True \
+  # --val_freq 10000 \

@@ -1009,6 +1009,9 @@ def finetune(cfg: FinetuneConfig) -> None:
         collate_fn=collator,
         num_workers=0,  # Important: Set to 0 if using RLDS, which uses its own parallelism
     )
+    example = next(iter(train_dataset))
+    print(type(example))
+
     if cfg.use_val_set:
         val_batch_size = cfg.batch_size
         val_dataloader = DataLoader(
@@ -1033,6 +1036,7 @@ def finetune(cfg: FinetuneConfig) -> None:
         vla.train()
         optimizer.zero_grad()
         for batch_idx, batch in enumerate(dataloader):
+            print(batch)
             # Compute training metrics and loss
             compute_diffusion_l1 = cfg.use_diffusion and batch_idx % cfg.diffusion_sample_freq == 0
             loss, metrics = run_forward_pass(

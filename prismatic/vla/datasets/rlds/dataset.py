@@ -196,7 +196,6 @@ def make_dataset_from_rlds(
                 tf.convert_to_tensor(absolute_action_mask, dtype=tf.bool)[None],
                 [traj_len, 1],
             )
-
         return traj
 
     builder = tfds.builder(name, data_dir=data_dir)
@@ -298,7 +297,7 @@ def apply_trajectory_transforms(
     if skip_unlabeled:
         if "language_instruction" not in dataset.element_spec["task"]:
             raise ValueError("skip_unlabeled=True but dataset does not have language labels.")
-
+        dataset = dataset.traj_map(lambda traj: {**traj, "task": {**traj["task"], "language_instruction": tf.repeat("turn on radio", tf.shape(traj["task"]["language_instruction"])[0])}})
         dataset = dataset.filter(lambda x: tf.math.reduce_any(x["task"]["language_instruction"] != ""))
 
     if max_action is not None:
