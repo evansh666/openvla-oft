@@ -5,7 +5,7 @@
 #SBATCH --partition=viscam
 #SBATCH --exclude=svl13,svl12
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:titanrtx:4
 #SBATCH --ntasks-per-node=4
 #SBATCH --mem=350G
 #SBATCH --cpus-per-task=8
@@ -16,7 +16,7 @@
 eval "$(conda shell.bash hook)"
 conda activate openvla-oft
 
-DATASET_ROOT_PATH=/vision/u/yinhang/data/openvla/behavior
+DATASET_ROOT_PATH=/vision/u/yinhang/data/openvla
 DATASET_NAME=behavior_turn_on_radio
 CHECKPOINT_PATH=/vision/u/yinhang/openvla-oft/checkpoints
 WANDB_ENTITY=evansh666-stanford-university

@@ -83,7 +83,7 @@ def process_proprio_state(proprio):
     left_gripper_width = proprio[:,194:196].sum(axis=-1)[:,None] # 1
     right_gripper_width = proprio[:,234:236].sum(axis=-1)[:,None] # 1
     
-    prop_state = np.concatenate((base_qvel, trunk_qpos, arm_left_qpos, arm_right_qpos, left_gripper_width, right_gripper_width), axis=-1) # 23
+    prop_state = np.concatenate((base_qpos, trunk_qpos, arm_left_qpos, arm_right_qpos, left_gripper_width, right_gripper_width), axis=-1) # 23
     return prop_state
 
 def create_episode_from_video(video_path, language_instruction):

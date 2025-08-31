@@ -11,7 +11,7 @@ IMAGE_SIZE = 256
 NUM_ACTIONS_CHUNK = 10
 ACTION_DIM = 23
 STATE_DIM = 23
-TRAIN_DATA_PATH = "/vision/group/behavior/videos/task-0000/observation.images.rgb.head"
+TRAIN_DATA_PATH = "/vision/group/behavior/2025-challenge-demos/videos/task-0000/observation.images.rgb.head"
 VAL_DATA_PATH = ""
 INSTRUCTION = "turn on radio"
 
