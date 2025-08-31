@@ -3,41 +3,31 @@ import glob
 import numpy as np
 import tensorflow_datasets as tfds
 
-from RLDS_builder.behavior_dataset.utils.conversion_utils import MultiThreadedDatasetBuilder, resize_with_pad
-from RLDS_builder.behavior_dataset.utils.data_utils import create_episode_from_hdf5, create_episode_from_video, ROBOT_CAMERA_NAMES
+from RLDS_builder.behavior_dataset.utils.conversion_utils import MultiThreadedDatasetBuilder 
+from RLDS_builder.behavior_dataset.utils.data_utils import create_episode_from_video, ROBOT_CAMERA_NAMES
 
 # Change following parameters to match your dataset
 IMAGE_SIZE = 256
 NUM_ACTIONS_CHUNK = 10
 ACTION_DIM = 23
 STATE_DIM = 23
-
-TRAIN_DATA_PATH = "/vision/u/wsai/data/behavior/videos/task-0000/observation.images.rgb.head"
+TRAIN_DATA_PATH = "/vision/group/behavior/videos/task-0000/observation.images.rgb.head"
 VAL_DATA_PATH = ""
-SOURCE = "video"
 INSTRUCTION = "turn on radio"
+
         
 def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
     """Yields episodes for list of data paths."""
-    def _parse_example(episode_path, source=SOURCE):
-        if source == "video":
-            episode = create_episode_from_video(episode_path, INSTRUCTION)
-            if episode is None:
-                return None
-            
-            sample = {
-            'steps': episode,
-            'episode_metadata': {
-                'file_path': episode_path,
-            }}
-        elif source == "parquet":
-            episode = create_episode_from_hdf5(episode_path)
-            sample = {
-                'steps': episode,
-                'episode_metadata': {
-                    "file_path": episode_path
-                }
-            }
+    def _parse_example(episode_path):
+        episode = create_episode_from_video(episode_path, INSTRUCTION)
+        if episode is None:
+            return None
+        
+        sample = {
+        'steps': episode,
+        'episode_metadata': {
+            'file_path': episode_path,
+        }}
         return episode_path, sample # Return None to skip an example
 
     for path in paths:
@@ -45,7 +35,7 @@ def _generate_examples(paths) -> Iterator[Tuple[str, Any]]:
         yield ret
 
 
-class behavior_turn_on_radio_210_demos(MultiThreadedDatasetBuilder):
+class behavior_turn_on_radio(MultiThreadedDatasetBuilder):
     """DatasetBuilder for example dataset."""
 
     VERSION = tfds.core.Version('1.0.0')
@@ -117,16 +107,10 @@ class behavior_turn_on_radio_210_demos(MultiThreadedDatasetBuilder):
     def _split_paths(self):
         """Define filepaths for data splits."""
         paths = {}
-  
-        if SOURCE == "video":
-            suffix = "mp4"
-        elif SOURCE == "hdf5":
-            suffix = "hdf5"
-        else:
-            raise ValueError(f"Invalid source: {SOURCE}")
-
+        suffix = "mp4"
         if TRAIN_DATA_PATH:
             paths["train"] = glob.glob(f"{TRAIN_DATA_PATH}/*.{suffix}")
+            print(f"Found {len(paths['train'])} training episodes")
         if VAL_DATA_PATH:
             paths["val"] = glob.glob(f"{VAL_DATA_PATH}/*.{suffix}")
         

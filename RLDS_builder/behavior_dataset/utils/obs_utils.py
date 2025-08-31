@@ -217,14 +217,11 @@ class VideoLoader:
                 frame = next(self._frame_iter)  # may raise StopIteration
                 processed_frame = self._process_single_frame(frame)
                 self._frames.append(processed_frame)
-                if len(self._frames) % 1000 == 0:
-                    print(len(self._frames))
                 if self.batch_size and len(self._frames) == self.batch_size:
                     batch = th.cat(self._frames, dim=0)
                     self._frames = self._frames[self.stride:]
                     return batch
         except StopIteration:
-            print("finish")
             self._done = True
             if len(self._frames) > 0:
                 batch = th.cat(self._frames, dim=0)
@@ -265,7 +262,7 @@ class RGBVideoLoader(VideoLoader):
         **kwargs
         ):
         super().__init__(
-            path=f"{data_path}/videos/task-{task_id:04d}/observation.images.rgb.{camera_id}/episode_{task_id:04d}{demo_id:03d}.mp4",
+            path=f"{data_path}/videos/task-{task_id:04d}/observation.images.rgb.{camera_id}/episode_{task_id:04d}{demo_id:04d}.mp4",
             *args, 
             **kwargs
         )
@@ -294,7 +291,7 @@ class DepthVideoLoader(VideoLoader):
         self.max_depth = kwargs.get("max_depth", MAX_DEPTH)
         self.shift = kwargs.get("shift", DEPTH_SHIFT)
         super().__init__(
-            path=f"{data_path}/videos/task-{task_id:04d}/observation.images.depth.{camera_id}/episode_{demo_id}.mp4",
+            path=f"{data_path}/videos/task-{task_id:04d}/observation.images.depth.{camera_id}/episode_{task_id:04d}{demo_id:04d}.mp4",
             *args, 
             **kwargs
         )
@@ -327,7 +324,7 @@ class SegVideoLoader(VideoLoader):
         self.id_list = self.id_list.to(device="cuda")  # (N_ids,)
         self.palette = th.from_numpy(generate_yuv_palette(len(self.id_list))).float().to(device="cuda")  # (N_ids, 3)
         super().__init__(
-            path=f"{data_path}/videos/task-{task_id:04d}/observation.images.seg_instance_id.{camera_id}/episode_{demo_id}.mp4",
+            path=f"{data_path}/videos/task-{task_id:04d}/observation.images.seg_instance_id.{camera_id}/episode_{task_id:04d}{demo_id:04d}.mp4",
             *args, 
             **kwargs
         )

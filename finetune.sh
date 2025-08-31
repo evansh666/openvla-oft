@@ -5,7 +5,7 @@
 #SBATCH --partition=viscam
 #SBATCH --exclude=svl13,svl12
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:a5000:4
+#SBATCH --gres=gpu:4
 #SBATCH --ntasks-per-node=4
 #SBATCH --mem=350G
 #SBATCH --cpus-per-task=8
@@ -17,11 +17,11 @@ eval "$(conda shell.bash hook)"
 conda activate openvla-oft
 
 DATASET_ROOT_PATH=/vision/u/yinhang/data/openvla/behavior
-DATASET_NAME=behavior_turn_on_radio_210_demos
+DATASET_NAME=behavior_turn_on_radio
 CHECKPOINT_PATH=/vision/u/yinhang/openvla-oft/checkpoints
 WANDB_ENTITY=evansh666-stanford-university
 WANDB_PROJECT=OpenVLA-OFT
-RUN_ID=parallel_dec--25_acts_chunk--continuous_acts--L1_regression--3rd_person_img--left_right_wrist_imgs--proprio_state--film
+RUN_ID=parallel_dec--10_acts_chunk--continuous_acts--L1_regression--3rd_person_img--left_right_wrist_imgs--proprio_state--film
 INPUT_NUM_IMGS=3
 mkdir -p $CHECKPOINT_PATH
 

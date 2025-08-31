@@ -113,7 +113,7 @@ class RLDSDataset(IterableDataset):
             mixture_spec = [(self.data_mix, 1.0)]
 
         # fmt: off
-        if "aloha" or "b1k" or "behavior"  in self.data_mix:
+        if "aloha" or "behavior"  in self.data_mix:
             print("loading three camera views")
             load_camera_views = ("primary", "left_wrist", "right_wrist")
         else:
