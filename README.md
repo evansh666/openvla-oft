@@ -2,9 +2,10 @@
 ```
 git clone https://github.com/moojink/openvla-oft
 git clone https://github.com/moojink/rlds_dataset_builder
+git clone https://github.com/StanfordVL/BEHAVIOR-1K.git
 ```
 
-## Environment Setup
+## Installation
 ```
 conda deactivate
 conda create -n openvla-oft python=3.10 -y
@@ -19,10 +20,14 @@ pip install packaging ninja
 ninja --version; echo $?  # Verify Ninja --> should return exit code "0"
 pip install "flash-attn==2.5.5" --no-build-isolation
 
-# install for RLDS dataset: tensorflow, tensorflow_datasets, tensorflow_hub, apache_beam
+# Install for RLDS dataset: tensorflow, tensorflow_datasets, tensorflow_hub, apache_beam
 pip install tensorflow_hub
 pip install apache_beam
 
+# Install Behavior env
+cd BEHAVIOR-1K
+git checkout eval
+./setup --omnigibson --teleop --bddl --eval
 ```
 
 ## Convert data from hdf5 to RLDS 
@@ -65,8 +70,14 @@ python vla-scripts/deploy.py \
   --use_proprio True \
   --center_crop True \
   --unnorm_key behavior_turn_on_radio
+
+  # Or directly run
+  ./deploy.sh
   ```
-  This opens a connection listening on 0.0.0.0:8777.
+  This opens a connection listening on 0.0.0.0:8000.
 
-2. Run the evaluation  
-
+2. Run the evaluation on BEHAVIOR
+```
+cd BEHAVIOR-1K/Omnigibson/omnigibson/learning
+python eval.py policy=websocket task.name=turning_on_radio
+```

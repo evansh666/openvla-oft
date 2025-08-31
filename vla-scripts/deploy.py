@@ -1,54 +1,36 @@
 """
-deploy.py
-
 Starts VLA server which the client can query to get robot actions.
 """
 
-import os.path
-
-# ruff: noqa: E402
-import json_numpy
-
-json_numpy.patch()
-import json
 import logging
 import numpy as np
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 import draccus
 import torch
-import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from PIL import Image
-from transformers import AutoModelForVision2Seq, AutoProcessor
-
 from experiments.robot.openvla_utils import (
     get_vla,
     get_vla_action,
     get_action_head,
     get_processor,
     get_proprio_projector,
+    resize_image_for_policy,
 )
 from experiments.robot.robot_utils import (
     get_image_resize_size,
 )
 from prismatic.vla.constants import ACTION_DIM, ACTION_TOKEN_BEGIN_IDX, IGNORE_INDEX, NUM_ACTIONS_CHUNK, PROPRIO_DIM, STOP_INDEX
 
+from omnigibson.learning.utils.network_utils import WebsocketPolicyServer
+from omnigibson.learning.utils.eval_utils import PROPRIOCEPTION_INDICES, ROBOT_CAMERA_NAMES
 
-def get_openvla_prompt(instruction: str, openvla_path: Union[str, Path]) -> str:
-    return f"In: What action should the robot take to {instruction.lower()}?\nOut:"
 
-
-# === Server Interface ===
-class OpenVLAServer:
-    def __init__(self, cfg) -> Path:
-        """
-        A simple server for OpenVLA models; exposes `/act` to predict an action for a given observation + instruction.
-        """
+# === Policy Wrapper for WebSocket Server ===
+class OpenVLAPolicy:
+    def __init__(self, cfg) -> None:
         self.cfg = cfg
 
         # Load model
@@ -68,43 +50,83 @@ class OpenVLAServer:
         assert cfg.unnorm_key in self.vla.norm_stats, f"Action un-norm key {cfg.unnorm_key} not found in VLA `norm_stats`!"
 
         # Get Hugging Face processor
-        self.processor = None
         self.processor = get_processor(cfg)
 
         # Get expected image dimensions
         self.resize_size = get_image_resize_size(cfg)
 
+        # Set robot type and instruction
+        self.robot_type = "R1Pro"
+        self.instruction = "turn on radio"
 
-    def get_server_action(self, payload: Dict[str, Any]) -> str:
+    def reset(self) -> None:
+        # No stateful components to reset for now
+        return None
+
+    def _to_numpy_obs(self, obs: Dict[str, Any]) -> Dict[str, Any]:
+        obs_numpy: Dict[str, Any] = {}
+        for key, value in obs.items():
+            if isinstance(value, torch.Tensor):
+                obs_numpy[key] = value.detach().cpu().numpy()
+            else:
+                obs_numpy[key] = value
+        return obs_numpy
+
+    def _generate_prop_state(self, proprio: np.ndarray) -> np.ndarray:
+        idx = PROPRIOCEPTION_INDICES[self.robot_type]
+        qpos_list = [
+            proprio[idx["base_qpos"]], # 3
+            proprio[idx["trunk_qpos"]], # 4
+            proprio[idx["arm_left_qpos"]], # 7
+            proprio[idx["arm_right_qpos"]], # 7
+            proprio[idx["gripper_left_qpos"]].sum(axis=-1, keepdims=True), # 1
+            proprio[idx["gripper_right_qpos"]].sum(axis=-1, keepdims=True), # 1
+        ]
+        return np.concatenate(qpos_list, axis=0)
+
+    def _process_behavior_obs(self, obs_numpy: Dict[str, Any]) -> Dict[str, Any]:
+        # Extract images
         try:
-            if double_encode := "encoded" in payload:
-                # Support cases where `json_numpy` is hard to install, and numpy arrays are "double-encoded" as strings
-                assert len(payload.keys()) == 1, "Only uses encoded payload!"
-                payload = json.loads(payload["encoded"])
+            full_image = obs_numpy[ROBOT_CAMERA_NAMES[self.robot_type]["head"] + "::rgb"][:, :, :3] # (720, 720, 3)
+            left_wrist_image = obs_numpy[ROBOT_CAMERA_NAMES[self.robot_type]["left_wrist"] + "::rgb"][:, :, :3] # (480, 480, 3)
+            right_wrist_image = obs_numpy[ROBOT_CAMERA_NAMES[self.robot_type]["right_wrist"] + "::rgb"][:, :, :3] # (480, 480, 3)
+            prop_state = self._generate_prop_state(obs_numpy["robot_r1::proprio"]) # (23, )
+        except KeyError as e:
+            logging.error(e)
+            raise
+        
+        return {
+            "full_image": resize_image_for_policy(full_image, self.resize_size), # resize images to training image size
+            "left_wrist_image": resize_image_for_policy(left_wrist_image, self.resize_size),
+            "right_wrist_image": resize_image_for_policy(right_wrist_image, self.resize_size),
+            "state": prop_state,
+            "instruction": self.instruction,
+        }
 
-            observation = payload
-            instruction = observation["instruction"]
+    def act(self, obs: Dict[str, Any]) -> torch.Tensor:
+        try:
+            # The websocket server converts incoming payload to torch tensors; convert back for OpenVLA utils
+            obs_numpy = self._to_numpy_obs(obs)
+            obs = self._process_behavior_obs(obs_numpy)
 
-            action = get_vla_action(
-                self.cfg, self.vla, self.processor, observation, instruction, action_head=self.action_head, proprio_projector=self.proprio_projector, use_film=self.cfg.use_film,
+            action_list = get_vla_action(
+                self.cfg,
+                self.vla,
+                self.processor,
+                obs,
+                self.instruction,
+                action_head=self.action_head,
+                proprio_projector=self.proprio_projector,
+                use_film=self.cfg.use_film,
             )
 
-            if double_encode:
-                return JSONResponse(json_numpy.dumps(action))
-            else:
-                return JSONResponse(action)
+            # Use the first action in the chunk
+            action_np = action_list[0] if isinstance(action_list, list) else action_list
+            action_tensor = torch.from_numpy(action_np).to(torch.float32)
+            return action_tensor
         except:  # noqa: E722
             logging.error(traceback.format_exc())
-            logging.warning(
-                "Your request threw an error; make sure your request complies with the expected format:\n"
-                "{'observation': dict, 'instruction': str}\n"
-            )
-            return "error"
-
-    def run(self, host: str = "0.0.0.0", port: int = 8777) -> None:
-        self.app = FastAPI()
-        self.app.post("/act")(self.get_server_action)
-        uvicorn.run(self.app, host=host, port=port)
+            raise
 
 
 @dataclass
@@ -113,7 +135,7 @@ class DeployConfig:
 
     # Server Configuration
     host: str = "0.0.0.0"                                               # Host IP Address
-    port: int = 8777                                                    # Host Port
+    port: int = 8000                                                    # Host Port
 
     #################################################################################################################
     # Model-specific parameters
@@ -128,28 +150,30 @@ class DeployConfig:
     use_film: bool = False                           # If True, uses FiLM to infuse language inputs into visual features
     num_images_in_input: int = 3                     # Number of images in the VLA input (default: 3)
     use_proprio: bool = True                         # Whether to include proprio state in input
-
     center_crop: bool = True                         # Center crop? (if trained w/ random crop image aug)
-
     lora_rank: int = 32                              # Rank of LoRA weight matrix (MAKE SURE THIS MATCHES TRAINING!)
-
     unnorm_key: Union[str, Path] = ""                # Action un-normalization key
     use_relative_actions: bool = False               # Whether to use relative actions (delta joint angles)
-
     load_in_8bit: bool = False                       # (For OpenVLA only) Load with 8-bit quantization
     load_in_4bit: bool = False                       # (For OpenVLA only) Load with 4-bit quantization
 
     #################################################################################################################
     # Utils
     #################################################################################################################
-    seed: int = 7                                    # Random Seed (for reproducibility)
+    seed: int = 42                                    # Random Seed (for reproducibility)
     # fmt: on
 
 
 @draccus.wrap()
 def deploy(cfg: DeployConfig) -> None:
-    server = OpenVLAServer(cfg)
-    server.run(cfg.host, port=cfg.port)
+    policy = OpenVLAPolicy(cfg)
+    server = WebsocketPolicyServer(
+        policy=policy,
+        host=cfg.host,
+        port=cfg.port,
+        metadata={"model_family": cfg.model_family},
+    )
+    server.serve_forever()
 
 
 if __name__ == "__main__":
