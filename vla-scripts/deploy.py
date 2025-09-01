@@ -24,6 +24,8 @@ from experiments.robot.robot_utils import (
 )
 from prismatic.vla.constants import ACTION_DIM, ACTION_TOKEN_BEGIN_IDX, IGNORE_INDEX, NUM_ACTIONS_CHUNK, PROPRIO_DIM, STOP_INDEX
 
+import sys
+sys.path.insert(0, "/vision/u/yinhang/BEHAVIOR-1K/OmniGibson")
 from omnigibson.learning.utils.network_utils import WebsocketPolicyServer
 from omnigibson.learning.utils.eval_utils import PROPRIOCEPTION_INDICES, ROBOT_CAMERA_NAMES
 
@@ -108,8 +110,7 @@ class OpenVLAPolicy:
             # The websocket server converts incoming payload to torch tensors; convert back for OpenVLA utils
             obs_numpy = self._to_numpy_obs(obs)
             obs = self._process_behavior_obs(obs_numpy)
-
-            action_list = get_vla_action(
+            action = get_vla_action(
                 self.cfg,
                 self.vla,
                 self.processor,
@@ -120,9 +121,8 @@ class OpenVLAPolicy:
                 use_film=self.cfg.use_film,
             )
 
-            # Use the first action in the chunk
-            action_np = action_list[0] if isinstance(action_list, list) else action_list
-            action_tensor = torch.from_numpy(action_np).to(torch.float32)
+            action_tensor = torch.from_numpy(np.array(action)).to(torch.float32)
+            print(action_tensor)
             return action_tensor
         except:  # noqa: E722
             logging.error(traceback.format_exc())

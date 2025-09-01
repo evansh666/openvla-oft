@@ -21,7 +21,7 @@ DATASET_NAME=behavior_turn_on_radio
 CHECKPOINT_PATH=/vision/u/yinhang/openvla-oft/checkpoints
 WANDB_ENTITY=evansh666-stanford-university
 WANDB_PROJECT=OpenVLA-OFT
-RUN_ID=parallel_dec--10_acts_chunk--continuous_acts--L1_regression--3rd_person_img--left_right_wrist_imgs--proprio_state--film
+RUN_ID=10_acts_chunk--continuous_acts--L1_regression--3img--proprio_state--film
 INPUT_NUM_IMGS=3
 mkdir -p $CHECKPOINT_PATH
 

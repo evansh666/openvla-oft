@@ -1,7 +1,8 @@
-## Clone OpenVLA-OFT and RLDS_DATASET_BUILDER
+## Repo Clone
 ```
-git clone https://github.com/moojink/openvla-oft
-git clone https://github.com/moojink/rlds_dataset_builder
+<!-- git clone https://github.com/moojink/openvla-oft -->
+<!-- git clone https://github.com/moojink/rlds_dataset_builder -->
+git clone https://github.com/evansh666/openvla-oft.git
 git clone https://github.com/StanfordVL/BEHAVIOR-1K.git
 ```
 
@@ -10,8 +11,6 @@ git clone https://github.com/StanfordVL/BEHAVIOR-1K.git
 conda deactivate
 conda create -n openvla-oft python=3.10 -y
 conda activate openvla-oft
-
-pip3 install torch torchvision torchaudio
 
 cd openvla-oft
 pip install -e .
@@ -24,13 +23,13 @@ pip install "flash-attn==2.5.5" --no-build-isolation
 pip install tensorflow_hub
 pip install apache_beam
 
-# Install Behavior env
+# Install Behavior env for server deploy 
 cd BEHAVIOR-1K
 git checkout eval
-./setup --omnigibson --teleop --bddl --eval
+./setup.sh --omnigibson --teleop --bddl --eval
 ```
 
-## Convert data from hdf5 to RLDS 
+## Data Conversion
 1. See instructions for converting to RLDS [here](RLDS_builder/README.md). 
 
 2. A sample BEHAVIOR data to RLDS conversion script is available [here](RLDS_builder/behavior_dataset/behavior_turn_on_radio/), you can use the following code to get RLDS-formatted data:
@@ -44,7 +43,7 @@ tfds build --data_dir /path/to/save/rlds/dataset
 
 
 
-## Finetune OpenVLA with OFT+
+## Finetune OpenVLA-OFT+
 1. Register the dataset (e.g. behavior_turn_on_radio) with openvla-oft dataloader by adding an entry in the following files:
     - Add an entry in StateEncoding and ActionEncoding; and Add a data name mapping in `configs.py` ([here](prismatic/vla/datasets/rlds/oxe/configs.py#L711))
     - Add data transform in `transforms.py` ([here](prismatic/vla/datasets/rlds/oxe/transforms.py#L937)) 
@@ -55,11 +54,11 @@ tfds build --data_dir /path/to/save/rlds/dataset
 
 3. Revise dataset and setting in [finetune.sh](finetune.sh). For more detailed parameter selection, please refer [OpenVLA-Finetune Instruction](https://github.com/moojink/openvla-oft/blob/main/ALOHA.md).
 ```
-./finetune.sh
+bash ./scripts/finetune.sh
 ```
 
 
-## Evaluation in Omnigibson
+## Evaluation
 1. Deploy finetuned checkpoint:
 ```
 python vla-scripts/deploy.py \
@@ -72,12 +71,18 @@ python vla-scripts/deploy.py \
   --unnorm_key behavior_turn_on_radio
 
   # Or directly run
-  ./deploy.sh
+  ./scripts/deploy.sh
   ```
   This opens a connection listening on 0.0.0.0:8000.
 
+
 2. Run the evaluation on BEHAVIOR
 ```
+# activate behavior environment
+conda deactivate
+conda activate behavior
+
+# run eval script
 cd BEHAVIOR-1K/Omnigibson/omnigibson/learning
 python eval.py policy=websocket task.name=turning_on_radio
 ```

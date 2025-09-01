@@ -6,11 +6,7 @@ conda deactivate
 conda create -n openvla-oft python=3.10 -y
 conda activate openvla-oft
 
-# Install PyTorch
-# Use a command specific to your machine: https://pytorch.org/get-started/locally/
-pip3 install torch torchvision torchaudio
-
-# Clone openvla-oft repo and pip install to download dependencies
+cd openvla-oft
 pip install -e .
 
 # Install Flash Attention 2 for training (https://github.com/Dao-AILab/flash-attention)
@@ -26,3 +22,5 @@ mkdir -p datasets
 pip install tensorflow_hub
 pip install apache_beam
 
+cd ../BEHAVIOR-1K
+./setup.sh --omnigibson --bddl --eval
