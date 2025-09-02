@@ -24,8 +24,6 @@ from experiments.robot.robot_utils import (
 )
 from prismatic.vla.constants import ACTION_DIM, ACTION_TOKEN_BEGIN_IDX, IGNORE_INDEX, NUM_ACTIONS_CHUNK, PROPRIO_DIM, STOP_INDEX
 
-import sys
-sys.path.insert(0, "/vision/u/yinhang/BEHAVIOR-1K/OmniGibson")
 from omnigibson.learning.utils.network_utils import WebsocketPolicyServer
 from omnigibson.learning.utils.eval_utils import PROPRIOCEPTION_INDICES, ROBOT_CAMERA_NAMES
 
