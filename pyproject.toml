@@ -58,7 +58,7 @@ dependencies = [
     "uvicorn",
     "fastapi",
     "json-numpy",
-    "numpy-1.26.4",
+    "numpy=1.26.4",
 ]
 
 [project.optional-dependencies]

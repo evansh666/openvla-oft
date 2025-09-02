@@ -122,11 +122,11 @@ class OpenVLAPolicy:
                     use_film=self.cfg.use_film,
                 )
 
-                action_tensor = torch.from_numpy(np.array(action_list)).to(torch.float32)
+                self.action_tensor = torch.from_numpy(np.array(action_list)).to(torch.float32)
                 self.action_idx = 0
-            
-            action = action_tensor[self.action_idx]
-            self.action_idx += 1            
+
+            action = self.action_tensor[self.action_idx]
+            self.action_idx += 1
             return action
         
         except:  # noqa: E722
