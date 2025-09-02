@@ -60,6 +60,8 @@ class OpenVLAPolicy:
         # Set robot type and instruction
         self.robot_type = "R1Pro"
         self.instruction = "turn on radio"
+        self.action_idx = 0
+        self.max_action_len = 10
 
     def reset(self) -> None:
         # No stateful components to reset for now
@@ -107,23 +109,28 @@ class OpenVLAPolicy:
 
     def act(self, obs: Dict[str, Any]) -> torch.Tensor:
         try:
-            # The websocket server converts incoming payload to torch tensors; convert back for OpenVLA utils
-            obs_numpy = self._to_numpy_obs(obs)
-            obs = self._process_behavior_obs(obs_numpy)
-            action = get_vla_action(
-                self.cfg,
-                self.vla,
-                self.processor,
-                obs,
-                self.instruction,
-                action_head=self.action_head,
-                proprio_projector=self.proprio_projector,
-                use_film=self.cfg.use_film,
-            )
+            if self.action_idx % self.max_action_len == 0:
+                # The websocket server converts incoming payload to torch tensors; convert back for OpenVLA utils
+                obs_numpy = self._to_numpy_obs(obs)
+                obs = self._process_behavior_obs(obs_numpy)
+                action_list = get_vla_action(
+                    self.cfg,
+                    self.vla,
+                    self.processor,
+                    obs,
+                    self.instruction,
+                    action_head=self.action_head,
+                    proprio_projector=self.proprio_projector,
+                    use_film=self.cfg.use_film,
+                )
 
-            action_tensor = torch.from_numpy(np.array(action)).to(torch.float32)
-            print(action_tensor)
-            return action_tensor
+                action_tensor = torch.from_numpy(np.array(action_list)).to(torch.float32)
+                self.action_idx = 0
+            
+            action = action_tensor[self.action_idx]
+            self.action_idx += 1            
+            return action
+        
         except:  # noqa: E722
             logging.error(traceback.format_exc())
             raise

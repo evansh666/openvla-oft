@@ -24,9 +24,16 @@ pip install tensorflow_hub
 pip install apache_beam
 
 # Install Behavior env for server deploy 
-cd BEHAVIOR-1K
-git checkout eval
-./setup.sh --omnigibson --teleop --bddl --eval
+cd ../BEHAVIOR-1K # go to BEHAVIOR-1K directory
+
+# Install bddl
+cd bddl
+pip install -e .
+pip install pymeshlab==2022.2.post4
+
+# Install omnigibson with eval dependencies
+cd Omnigibson
+pip install .[eval]
 ```
 
 ## Data Conversion
@@ -78,9 +85,10 @@ python vla-scripts/deploy.py \
 
 2. Run the evaluation on BEHAVIOR
 ```
-# activate behavior environment
+# activate your installed behavior environment
+# if you haven't install behavior environment, check https://github.com/StanfordVL/BEHAVIOR-1K
 conda deactivate
-conda activate behavior
+conda activate behavior 
 
 # run eval script
 cd BEHAVIOR-1K/Omnigibson/omnigibson/learning
