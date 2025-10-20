@@ -48,6 +48,7 @@ Since Openvla-oft requires RLDS dataset, we need first convert BEHAVIOR dataset 
 
 ```
 cd RLDS_builder
+cd behavior_dataset/behavior_turn_on_radio
 tfds build --data_dir /path/to/save/rlds/dataset
 ```
 
