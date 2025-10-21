@@ -76,12 +76,12 @@ def load_low_dim_from_parquet(data_folder, task_id, demo_id):
     return (actions, proprio)
 
 def process_proprio_state(proprio):
-    base_qpos = proprio[:,246:249] # 3
-    trunk_qpos = proprio[:,238:242] # 4
+    base_qpos = proprio[:,253:256] # 3
+    trunk_qpos = proprio[:,236:240] # 4
     arm_left_qpos = proprio[:,158:165] #  7
-    arm_right_qpos = proprio[:,198:205] #  7
-    left_gripper_width = proprio[:,194:196].sum(axis=-1)[:,None] # 1
-    right_gripper_width = proprio[:,234:236].sum(axis=-1)[:,None] # 1
+    arm_right_qpos = proprio[:,197:204] #  7
+    left_gripper_width = proprio[:,193:195].sum(axis=-1)[:,None] # 1
+    right_gripper_width = proprio[:,232:234].sum(axis=-1)[:,None] # 1
     
     prop_state = np.concatenate((base_qpos, trunk_qpos, arm_left_qpos, arm_right_qpos, left_gripper_width, right_gripper_width), axis=-1) # 23
     return prop_state
